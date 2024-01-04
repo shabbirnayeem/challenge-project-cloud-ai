@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "/workspaces/challenge-project-cloud-ai/obj/Debug/net8.0/scopedcss/projectbundle/challenge-project-cloud-ai.bundle.scp.css",
+      "PackagePath": "staticwebassets/challenge-project-cloud-ai.bundle.scp.css"
+    },
+    {
+      "Id": "/workspaces/challenge-project-cloud-ai/wwwroot/app.css",
+      "PackagePath": "staticwebassets/app.css"
+    },
+    {
+      "Id": "/workspaces/challenge-project-cloud-ai/wwwroot/bootstrap/bootstrap.min.css",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css"
+    },
+    {
+      "Id": "/workspaces/challenge-project-cloud-ai/wwwroot/bootstrap/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/workspaces/challenge-project-cloud-ai/wwwroot/favicon.png",
+      "PackagePath": "staticwebassets/favicon.png"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.challenge-project-cloud-ai.props",
+      "PackagePath": "build\\challenge-project-cloud-ai.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.challenge-project-cloud-ai.props",
+      "PackagePath": "buildMultiTargeting\\challenge-project-cloud-ai.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.challenge-project-cloud-ai.props",
+      "PackagePath": "buildTransitive\\challenge-project-cloud-ai.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.challenge-project-cloud-ai.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

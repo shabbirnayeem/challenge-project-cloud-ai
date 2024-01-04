@@ -1,0 +1,155 @@
+﻿@page "/"
+@using Azure;
+@using Azure.AI.Vision.Common;
+@using Azure.AI.Vision.ImageAnalysis;
+@rendermode InteractiveServer
+@using System;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using System.Text.Json;
+@using System.Threading.Tasks;
+@using Newtonsoft.Json;
+@using System.Text;
+
+<PageTitle>Home</PageTitle>
+
+<h1>Computer Vision</h1>
+
+<p> Insert URL or type prompt: </p>
+
+<textarea @bind="urlPrompt" rows="1" cols="50"
+    placeholder="Enter URL to anayze or textual prompt to generate an image"></textarea>
+<br />
+<button @onclick="AnalyzeImage">Analyze</button>
+<button @onclick="GenerateImage">Generate</button>
+<br />
+<img src="@imageurl" alt="Image to analyze" width="300" height="300" />
+<br />
+<p>@caption</p>
+
+@code
+{
+    string urlPrompt = "";
+    string imageurl = "https://placehold.it/300x300";
+    string caption = "";
+
+    void AnalyzeImage()
+    {
+        {
+            var serviceOptions = new VisionServiceOptions(
+            Environment.GetEnvironmentVariable("VISION_ENDPOINT"),
+            new AzureKeyCredential(Environment.GetEnvironmentVariable("VISION_KEY")));
+
+            using var imageSource = VisionSource.FromUrl(
+            new Uri(urlPrompt));
+            imageurl = urlPrompt;
+
+            var analysisOptions = new ImageAnalysisOptions()
+                {
+                    Features = ImageAnalysisFeature.Caption | ImageAnalysisFeature.Text,
+
+                    Language = "en",
+
+                    GenderNeutralCaption = true
+                };
+
+            using var analyzer = new ImageAnalyzer(serviceOptions, imageSource, analysisOptions);
+
+            var result = analyzer.Analyze();
+
+            if (result.Reason == ImageAnalysisResultReason.Analyzed)
+            {
+                if (result.Caption != null)
+                {
+                    Console.WriteLine(" Caption:");
+                    Console.WriteLine($" \"{result.Caption.Content}\", Confidence {result.Caption.Confidence:0.0000}");
+                    caption = result.Caption.Content;
+                }
+
+                if (result.Text != null)
+                {
+                    Console.WriteLine($" Text:");
+                    foreach (var line in result.Text.Lines)
+                    {
+                        string pointsToString = "{" + string.Join(',', line.BoundingPolygon.Select(pointsToString => pointsToString.ToString()))
+                        + "}";
+                        Console.WriteLine($" Line: '{line.Content}', Bounding polygon {pointsToString}");
+
+                        foreach (var word in line.Words)
+                        {
+                            pointsToString = "{" + string.Join(',', word.BoundingPolygon.Select(pointsToString => pointsToString.ToString())) + "}";
+                            Console.WriteLine($" Word: '{word.Content}', Bounding polygon {pointsToString}, Confidence {word.Confidence:0.0000}");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var errorDetails = ImageAnalysisErrorDetails.FromResult(result);
+                Console.WriteLine(" Analysis failed.");
+                Console.WriteLine($" Error reason : {errorDetails.Reason}");
+                Console.WriteLine($" Error code : {errorDetails.ErrorCode}");
+                Console.WriteLine($" Error message: {errorDetails.Message}");
+            }
+        }
+    }
+    async Task GenerateImage()
+    {   
+        string apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            Console.WriteLine("OPENAI_API_KEY environment variable is not set.");
+            return;
+        }
+
+        using var client = new HttpClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+        var requestData = new
+        {
+            model = "dall-e-2",
+            prompt = urlPrompt,
+            size = "1024x1024",
+            n = 1
+        };
+
+        var requestBody = JsonConvert.SerializeObject(requestData);
+
+        var apiUrl = "https://api.openai.com/v1/images/generations";
+
+        using var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+        using var response = await client.PostAsync(apiUrl, content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync();
+            var responseData = JsonConvert.DeserializeObject<OpenAIImageResponse>(responseBody);
+
+            if (responseData?.Data?.Length > 0)
+            {
+                caption = null;
+                imageurl = responseData.Data[0].Url; 
+            }
+            else
+            {
+                Console.WriteLine("No image URL found in the response.");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Failed to generate image: {response.StatusCode}");
+        }
+    }
+    public class OpenAIImageResponse
+    {
+        public class ImageData
+        {
+            public string Id { get; set; }
+            public string Object { get; set; }
+            public string Url { get; set; }
+        }
+
+        public string Object { get; set; }
+        public ImageData[] Data { get; set; }
+    }
+}
