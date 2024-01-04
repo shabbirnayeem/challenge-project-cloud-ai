@@ -17,6 +17,7 @@ override.tf.json
 terraform.rc
 .terraform.lock.hcl
 
+challenge-project-cloud-ai.sln
 
 # .NET
 project.lock.json
